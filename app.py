@@ -20,13 +20,16 @@ def extract():
         res = requests.get(target_url, timeout=10)
         content = res.text
 
-        mp4_links = list(set(re.findall(r'https?://[^\s"\'<>]+\.mp4[^\s"\'<>]*', content)))
         m3u8_links = list(set(re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)))
+        mp4_links = list(set(re.findall(r'https?://[^\s"\'<>]+\.mp4[^\s"\'<>]*', content)))
 
-        return jsonify({
-            'mp4': mp4_links,
-            'm3u8': m3u8_links
-        })
+        # Priority: if m3u8 found, show only those, else mp4, else none
+        if m3u8_links:
+            return jsonify({'type': 'm3u8', 'links': m3u8_links})
+        elif mp4_links:
+            return jsonify({'type': 'mp4', 'links': mp4_links})
+        else:
+            return jsonify({'type': 'none', 'message': 'No direct m3u8 or mp4 links found.'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
